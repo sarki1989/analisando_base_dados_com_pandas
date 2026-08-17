@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: stokes
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-stokes}
+      POSTGRES_DB: stokes_crm
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stokes -d stokes_crm"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://stokes:${POSTGRES_PASSWORD:-stokes}@db:5432/stokes_crm
+      AUTH_SECRET: ${AUTH_SECRET}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      INBOUND_API_TOKEN: ${INBOUND_API_TOKEN}
+      WHATSAPP_NUMERO: ${WHATSAPP_NUMERO:-5511940894977}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backups:/app/backups
+
+volumes:
+  db_data:
