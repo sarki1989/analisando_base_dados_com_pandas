@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
+import { calcularFatorPreco } from "@/lib/cotacao";
 
 const schema = z.object({
   razaoSocial: z.string().min(1),
@@ -21,6 +22,10 @@ const schema = z.object({
   pixChave: z.string().optional(),
   whatsappNumero: z.string().min(8),
   rodapePdf: z.string().optional(),
+  impostoPercent: z.coerce.number().min(0),
+  margemPercent: z.coerce.number().min(0),
+  despesasPercent: z.coerce.number().min(0),
+  validadeDiasPadrao: z.coerce.number().int().positive(),
 });
 
 export type SalvarConfiguracaoState = { erro?: string; sucesso?: boolean };
@@ -37,6 +42,12 @@ export async function salvarConfiguracao(
   const resultado = schema.safeParse(dados);
   if (!resultado.success) {
     return { erro: resultado.error.issues[0]?.message ?? "Dados inválidos." };
+  }
+
+  try {
+    calcularFatorPreco(resultado.data);
+  } catch (e) {
+    return { erro: e instanceof Error ? e.message : "Percentuais inválidos." };
   }
 
   await prisma.configuracaoEmpresa.update({

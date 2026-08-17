@@ -34,6 +34,13 @@ export function diasDesde(data: Date | string | null | undefined) {
   return Math.floor(diffMs / (1000 * 60 * 60 * 24));
 }
 
+/** Dias corridos entre agora e uma data futura (arredondado para cima). */
+export function diasAte(data: Date | string) {
+  const d = typeof data === "string" ? new Date(data) : data;
+  const diffMs = d.getTime() - Date.now();
+  return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+}
+
 /** Mantém apenas dígitos — útil para montar números no formato E.164 usado pelo wa.me. */
 export function apenasDigitos(valor: string) {
   return valor.replace(/\D/g, "");

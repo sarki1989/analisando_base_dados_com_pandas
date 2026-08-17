@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Plus } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatBRL, formatData, formatTelefone } from "@/lib/format";
 import { paraArrayJSON } from "@/lib/json-array";
@@ -114,20 +115,33 @@ export default async function LeadDetalhePage(props: PageProps<"/leads/[id]">) {
         </Card>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="flex-row items-center justify-between space-y-0">
             <CardTitle className="text-base">Cotações</CardTitle>
+            <Button asChild size="sm" variant="outline">
+              <Link href={`/cotacoes/nova?leadId=${lead.id}`}>
+                <Plus />
+                Nova
+              </Link>
+            </Button>
           </CardHeader>
           <CardContent className="flex flex-col gap-2 text-sm">
             {lead.cotacoes.length === 0 ? (
-              <p className="text-muted-foreground">Nenhuma cotação ainda (Fase 4).</p>
+              <p className="text-muted-foreground">Nenhuma cotação ainda.</p>
             ) : (
               lead.cotacoes.map((c) => (
-                <div key={c.id} className="flex items-center justify-between">
-                  <span>{c.numero}</span>
-                  <Badge variant="outline" className="capitalize">
-                    {c.status}
-                  </Badge>
-                </div>
+                <Link
+                  key={c.id}
+                  href={`/cotacoes/${c.id}`}
+                  className="flex items-center justify-between rounded-md px-2 py-1 hover:bg-secondary"
+                >
+                  <span className="font-mono text-xs">{c.numero}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">{formatBRL(c.total)}</span>
+                    <Badge variant="outline" className="capitalize">
+                      {c.status}
+                    </Badge>
+                  </div>
+                </Link>
               ))
             )}
           </CardContent>

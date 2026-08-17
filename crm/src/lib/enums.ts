@@ -61,7 +61,10 @@ export const CATEGORIAS_PRODUTO = [
 ] as const;
 export type CategoriaProduto = (typeof CATEGORIAS_PRODUTO)[number];
 
-export const DIAMETROS_SONDAGEM = ["BQ", "NQ", "HQ", "PW", "PQ", "NW", "AW", "AWJ", "NWG", "NWM"] as const;
+export const DIAMETROS_SONDAGEM = [
+  "LTK", "LTK48", "A", "AQ", "B", "BQ", "BX", "N", "NQ", "H", "HQ",
+  "PW", "SW", "ZW", "PQ", "NW", "AW", "AWJ", "NWG", "NWM",
+] as const;
 
 export const STATUS_COTACAO = [
   "rascunho",
