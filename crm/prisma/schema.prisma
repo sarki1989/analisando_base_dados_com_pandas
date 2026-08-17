@@ -1,0 +1,235 @@
+// Schema Prisma do CRM Stokes Brasil.
+//
+// Compatibilidade com PostgreSQL em produção: nenhum tipo específico do SQLite
+// é usado (sem enums nativos, sem arrays nativos — enums de negócio ficam como
+// String validada por Zod em src/lib/enums.ts). Para produção, troque o
+// `provider` do datasource abaixo para "postgresql", aponte DATABASE_URL para
+// o banco Postgres e rode `npx prisma migrate dev` para gerar o histórico de
+// migrações do zero (ver README, seção Deploy).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id         String   @id @default(cuid())
+  nome       String
+  email      String   @unique
+  senhaHash  String
+  papel      String   @default("vendedor") // admin | vendedor
+  ativo      Boolean  @default(true)
+  criadoEm   DateTime @default(now())
+
+  leadsResponsavel Lead[]      @relation("LeadResponsavel")
+  interacoes       Interacao[]
+  tarefas          Tarefa[]
+  cotacoes         Cotacao[]
+  auditLogs        AuditLog[]
+}
+
+model Lead {
+  id                String   @id @default(cuid())
+  nome              String
+  empresa           String
+  cnpj              String?
+  telefone          String
+  email             String?
+  cidade            String?
+  uf                String?
+  setor             String // sondagem geotécnica | mineração | construção civil | poços | outro
+  produtoInteresse  String? // JSON string com array de interesses
+  status            String   @default("Novo")
+  origem            String?
+  valorEstimado     Float?
+  observacoes       String?
+  motivoPerda       String?
+  consentimentoLgpd Boolean  @default(false)
+  criadoEm          DateTime @default(now())
+  atualizadoEm      DateTime @updatedAt
+  ultimoContatoEm   DateTime?
+  proximaAcaoEm     DateTime?
+
+  responsavelId String?
+  responsavel   Usuario? @relation("LeadResponsavel", fields: [responsavelId], references: [id])
+
+  atribuicao  Atribuicao?
+  interacoes  Interacao[]
+  tarefas     Tarefa[]
+  cotacoes    Cotacao[]
+  cliques     CliqueWhatsapp[]
+
+  @@index([status])
+  @@index([responsavelId])
+}
+
+model Atribuicao {
+  id                String    @id @default(cuid())
+  leadId            String    @unique
+  lead              Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  gclid             String?
+  utmSource         String?
+  utmMedium         String?
+  utmCampaign       String?
+  utmTerm           String?
+  utmContent        String?
+  paginaLanding     String?
+  referrer          String?
+  dispositivo       String?
+  primeiroCliqueEm  DateTime?
+  cliqueWhatsappId  String?
+}
+
+model Interacao {
+  id        String   @id @default(cuid())
+  leadId    String
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  tipo      String // whatsapp | ligação | e-mail | reunião | visita
+  direcao   String // entrada | saída
+  resumo    String
+  data      DateTime @default(now())
+  usuarioId String
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id])
+
+  @@index([leadId])
+}
+
+model Tarefa {
+  id            String    @id @default(cuid())
+  leadId        String?
+  lead          Lead?     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  titulo        String
+  descricao     String?
+  vencimentoEm  DateTime
+  concluidaEm   DateTime?
+  prioridade    String    @default("média") // baixa | média | alta
+  responsavelId String
+  responsavel   Usuario   @relation(fields: [responsavelId], references: [id])
+  criadoEm      DateTime  @default(now())
+
+  @@index([vencimentoEm])
+  @@index([responsavelId])
+}
+
+model Produto {
+  id              String   @id @default(cuid())
+  sku             String   @unique
+  descricao       String
+  categoria       String // coroa diamantada | calibrador | barrilete | revestimento | haste | acessório | broca concreto | outro
+  diametro        String? // BQ/NQ/HQ/PW/NW/AW...
+  unidade         String   @default("un")
+  custoFornecedor Float?
+  precoBase       Float
+  ativo           Boolean  @default(true)
+  criadoEm        DateTime @default(now())
+
+  itensCotacao ItemCotacao[]
+}
+
+model Cotacao {
+  id                String   @id @default(cuid())
+  numero            String   @unique // DDMMAAAA-NN
+  leadId            String
+  lead              Lead     @relation(fields: [leadId], references: [id])
+  status            String   @default("rascunho") // rascunho | enviada | em negociação | aprovada | perdida
+  emitidaEm         DateTime @default(now())
+  validadeDias      Int      @default(15)
+  condicaoPagamento String?
+  prazoFabricacao   String?
+  frete             String? // por conta do cliente | incluso | a combinar
+  observacoes       String?
+  subtotal          Float    @default(0)
+  desconto          Float    @default(0)
+  total             Float    @default(0)
+  motivoPerda       String?
+  revisaoDeId       String? // id da cotação original, quando é uma revisão (-R2, -R3...)
+  revisaoNumero     Int      @default(1)
+
+  usuarioId String?
+  usuario   Usuario? @relation(fields: [usuarioId], references: [id])
+
+  itens ItemCotacao[]
+
+  @@index([leadId])
+  @@index([status])
+}
+
+model ItemCotacao {
+  id              String  @id @default(cuid())
+  cotacaoId       String
+  cotacao         Cotacao @relation(fields: [cotacaoId], references: [id], onDelete: Cascade)
+  produtoId       String?
+  produto         Produto? @relation(fields: [produtoId], references: [id])
+  descricaoLivre  String?
+  quantidade      Float
+  precoUnitario   Float
+  desconto        Float   @default(0)
+  total           Float
+  ordem           Int     @default(0)
+}
+
+model CliqueWhatsapp {
+  id            String    @id @default(cuid())
+  codigo        String    @unique // ex: SB-7F3K
+  gclid         String?
+  utmSource     String?
+  utmMedium     String?
+  utmCampaign   String?
+  utmTerm       String?
+  utmContent    String?
+  referrer      String?
+  userAgent     String?
+  origem        String? // parâmetro ?origem= (ex: hero, rodape, mineracao-sondagem)
+  paginaLanding String?
+  dispositivo   String?
+  criadoEm      DateTime  @default(now())
+  vinculadoEm   DateTime?
+
+  leadId String?
+  lead   Lead?   @relation(fields: [leadId], references: [id])
+
+  @@index([leadId])
+  @@index([criadoEm])
+}
+
+model ConfiguracaoEmpresa {
+  id                 String  @id @default("default")
+  razaoSocial         String
+  nomeFantasia         String
+  cnpj                 String
+  inscricaoEstadual   String?
+  endereco             String
+  telefone             String
+  email                String?
+  site                 String?
+  banco                String?
+  agencia              String?
+  conta                String?
+  pixChave             String?
+  logoUrl              String?
+  corPrimaria          String  @default("#1A1D21")
+  corAcento            String  @default("#E2601A")
+  impostoPercent       Float   @default(4)
+  margemPercent        Float   @default(10)
+  despesasPercent      Float   @default(5)
+  validadeDiasPadrao   Int     @default(15)
+  whatsappNumero       String  @default("5511940894977")
+  rodapePdf            String?
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  entidade   String // "Lead" | "Cotacao" | ...
+  entidadeId String
+  acao       String // ex: "status_alterado"
+  detalhe    String? // ex: "Novo -> Contato feito" (sem dados pessoais)
+  usuarioId  String
+  usuario    Usuario  @relation(fields: [usuarioId], references: [id])
+  criadoEm   DateTime @default(now())
+
+  @@index([entidade, entidadeId])
+}
