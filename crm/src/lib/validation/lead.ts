@@ -16,6 +16,7 @@ export const leadSchema = z.object({
   observacoes: z.string().optional(),
   consentimentoLgpd: z.boolean().default(false),
   responsavelId: z.string().optional(),
+  codigoClique: z.string().optional(),
 });
 
 export type LeadInput = z.infer<typeof leadSchema>;

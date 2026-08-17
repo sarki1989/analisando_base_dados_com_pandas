@@ -21,6 +21,11 @@ export function formatDataHora(data: Date | string | null | undefined) {
   }).format(d);
 }
 
+/** Retorna a data de N horas atrás a partir de agora. */
+export function horasAtras(horas: number) {
+  return new Date(Date.now() - horas * 60 * 60 * 1000);
+}
+
 /** Dias corridos entre a data informada e agora (arredondado para baixo). */
 export function diasDesde(data: Date | string | null | undefined) {
   if (!data) return null;

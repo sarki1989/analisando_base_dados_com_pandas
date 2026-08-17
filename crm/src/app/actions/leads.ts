@@ -31,7 +31,18 @@ export async function criarLead(_prev: FormState, formData: FormData): Promise<F
     return { erro: parsed.error.issues[0]?.message ?? "Dados inválidos." };
   }
 
-  const { produtoInteresse, ...dados } = parsed.data;
+  const { produtoInteresse, codigoClique, ...dados } = parsed.data;
+
+  const clique = codigoClique
+    ? await prisma.cliqueWhatsapp.findUnique({ where: { codigo: codigoClique.trim().toUpperCase() } })
+    : null;
+
+  if (codigoClique && !clique) {
+    return { erro: `Nenhum clique encontrado com o código "${codigoClique}".` };
+  }
+  if (clique?.leadId) {
+    return { erro: "Este código de clique já está vinculado a outro lead." };
+  }
 
   const lead = await prisma.lead.create({
     data: {
@@ -39,8 +50,33 @@ export async function criarLead(_prev: FormState, formData: FormData): Promise<F
       email: dados.email || null,
       produtoInteresse: deArrayParaJSON(produtoInteresse),
       responsavelId: dados.responsavelId || usuario.id,
+      origem: clique ? "WhatsApp (site)" : undefined,
+      ...(clique && {
+        atribuicao: {
+          create: {
+            gclid: clique.gclid,
+            utmSource: clique.utmSource,
+            utmMedium: clique.utmMedium,
+            utmCampaign: clique.utmCampaign,
+            utmTerm: clique.utmTerm,
+            utmContent: clique.utmContent,
+            paginaLanding: clique.paginaLanding,
+            referrer: clique.referrer,
+            dispositivo: clique.dispositivo,
+            primeiroCliqueEm: clique.criadoEm,
+            cliqueWhatsappId: clique.id,
+          },
+        },
+      }),
     },
   });
+
+  if (clique) {
+    await prisma.cliqueWhatsapp.update({
+      where: { id: clique.id },
+      data: { leadId: lead.id, vinculadoEm: new Date() },
+    });
+  }
 
   await registrarAuditoria({
     entidade: "Lead",

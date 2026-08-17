@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -16,19 +16,23 @@ import type { FormState } from "@/app/actions/leads";
 import type { LeadComRelacoes } from "./types";
 
 type Usuario = { id: string; nome: string };
+type CliqueSugerido = { codigo: string; origem: string | null; utmCampaign: string | null };
 
 export function LeadForm({
   action,
   usuarios,
   lead,
+  cliquesSugeridos,
   onSucesso,
 }: {
   action: (prev: FormState, formData: FormData) => Promise<FormState>;
   usuarios: Usuario[];
   lead?: LeadComRelacoes;
+  cliquesSugeridos?: CliqueSugerido[];
   onSucesso?: () => void;
 }) {
   const [state, formAction, pending] = useActionState(action, {} as FormState);
+  const [codigoClique, setCodigoClique] = useState("");
 
   useEffect(() => {
     if (state.sucesso) {
@@ -112,6 +116,36 @@ export function LeadForm({
           placeholder="ex: coroa HQ, barrilete NQ — Enter para adicionar"
         />
       </div>
+
+      {!lead && (
+        <div className="flex flex-col gap-1.5 sm:col-span-2">
+          <Label htmlFor="codigoClique">Código do clique de WhatsApp (opcional)</Label>
+          <Input
+            id="codigoClique"
+            name="codigoClique"
+            placeholder="ex: SB-7F3K"
+            value={codigoClique}
+            onChange={(e) => setCodigoClique(e.target.value.toUpperCase())}
+          />
+          {cliquesSugeridos && cliquesSugeridos.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5 pt-1">
+              <span className="text-xs text-muted-foreground">Cliques recentes sem lead:</span>
+              {cliquesSugeridos.map((c) => (
+                <button
+                  key={c.codigo}
+                  type="button"
+                  onClick={() => setCodigoClique(c.codigo)}
+                  className="rounded-full border border-border px-2 py-0.5 text-xs hover:border-accent hover:text-accent"
+                  title={c.utmCampaign ?? undefined}
+                >
+                  {c.codigo}
+                  {c.origem ? ` · ${c.origem}` : ""}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="flex flex-col gap-1.5 sm:col-span-2">
         <Label htmlFor="observacoes">Observações</Label>

@@ -8,7 +8,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { criarLead } from "@/app/actions/leads";
 import { LeadForm } from "./lead-form";
 
-export function NovoLeadDialog({ usuarios }: { usuarios: { id: string; nome: string }[] }) {
+type CliqueSugerido = { codigo: string; origem: string | null; utmCampaign: string | null };
+
+export function NovoLeadDialog({
+  usuarios,
+  cliquesRecentes,
+}: {
+  usuarios: { id: string; nome: string }[];
+  cliquesRecentes?: CliqueSugerido[];
+}) {
   const [aberto, setAberto] = useState(false);
 
   return (
@@ -23,7 +31,12 @@ export function NovoLeadDialog({ usuarios }: { usuarios: { id: string; nome: str
         <DialogHeader>
           <DialogTitle>Novo lead</DialogTitle>
         </DialogHeader>
-        <LeadForm action={criarLead} usuarios={usuarios} onSucesso={() => setAberto(false)} />
+        <LeadForm
+          action={criarLead}
+          usuarios={usuarios}
+          cliquesSugeridos={cliquesRecentes}
+          onSucesso={() => setAberto(false)}
+        />
       </DialogContent>
     </Dialog>
   );
