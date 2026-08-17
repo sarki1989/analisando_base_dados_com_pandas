@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatBRL, formatData } from "@/lib/format";
 import { NovaCotacaoDialog } from "@/components/cotacoes/nova-cotacao-dialog";
+import { ExportarButton } from "@/components/shared/exportar-button";
 
 export const metadata = { title: "Cotações — CRM Stokes Brasil" };
 
@@ -25,7 +26,10 @@ export default async function CotacoesPage() {
           <h1 className="text-xl font-semibold">Cotações</h1>
           <p className="text-sm text-muted-foreground">{cotacoes.length} cotações emitidas.</p>
         </div>
-        <NovaCotacaoDialog leads={leads} />
+        <div className="flex items-center gap-2">
+          <ExportarButton recurso="cotacoes" />
+          <NovaCotacaoDialog leads={leads} />
+        </div>
       </div>
 
       <Card>

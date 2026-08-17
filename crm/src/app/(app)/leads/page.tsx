@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { KanbanBoardLoader } from "@/components/leads/kanban-board-loader";
 import { NovoLeadDialog } from "@/components/leads/novo-lead-dialog";
+import { ImportarLeadsDialog } from "@/components/leads/importar-leads-dialog";
+import { ExportarButton } from "@/components/shared/exportar-button";
 import { horasAtras } from "@/lib/format";
 
 export const metadata = { title: "Leads — CRM Stokes Brasil" };
@@ -27,7 +29,11 @@ export default async function LeadsPage() {
           <h1 className="text-xl font-semibold">Leads</h1>
           <p className="text-sm text-muted-foreground">Arraste os cards para mudar a etapa do funil.</p>
         </div>
-        <NovoLeadDialog usuarios={usuarios} cliquesRecentes={cliquesRecentes} />
+        <div className="flex items-center gap-2">
+          <ExportarButton recurso="leads" />
+          <ImportarLeadsDialog />
+          <NovoLeadDialog usuarios={usuarios} cliquesRecentes={cliquesRecentes} />
+        </div>
       </div>
       <KanbanBoardLoader leads={leads} />
     </div>
