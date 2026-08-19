@@ -11,6 +11,7 @@ import { CotacaoBuilder } from "@/components/cotacoes/cotacao-builder";
 import { CotacaoView } from "@/components/cotacoes/cotacao-view";
 import { EnviarWhatsappButton } from "@/components/cotacoes/enviar-whatsapp-button";
 import { BaixarPdfButton, DuplicarCotacaoButton, ExcluirCotacaoButton } from "@/components/cotacoes/cotacao-actions";
+import { GeradorMensagemDialog } from "@/components/leads/gerador-mensagem-dialog";
 
 export default async function CotacaoDetalhePage(props: PageProps<"/cotacoes/[id]">) {
   const { id } = await props.params;
@@ -66,6 +67,14 @@ export default async function CotacaoDetalhePage(props: PageProps<"/cotacoes/[id
             validadeDias={cotacao.validadeDias}
           />
           <BaixarPdfButton cotacaoId={cotacao.id} />
+          {!ehRascunho && (
+            <GeradorMensagemDialog
+              leadId={cotacao.lead.id}
+              telefone={cotacao.lead.telefone}
+              email={cotacao.lead.email}
+              tipoInicial="enviar_proposta"
+            />
+          )}
           <DuplicarCotacaoButton cotacaoId={cotacao.id} />
           {ehRascunho && <ExcluirCotacaoButton cotacaoId={cotacao.id} />}
         </div>

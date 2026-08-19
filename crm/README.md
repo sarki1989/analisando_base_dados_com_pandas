@@ -59,6 +59,8 @@ Ver `.env.example` para a lista completa. As mais importantes:
 - `INBOUND_API_TOKEN` — token que protege o endpoint `POST /api/leads/inbound`
 - `WHATSAPP_NUMERO` — número oficial do WhatsApp da empresa (E.164, sem `+`)
 - `NEXT_PUBLIC_APP_URL` — URL pública onde o CRM está hospedado
+- `ANTHROPIC_API_KEY` — opcional; habilita o gerador de mensagens com IA
+  (sem ela, o recurso mostra um erro amigável ao usar)
 
 ## Scripts
 
@@ -242,11 +244,27 @@ Zapier/Make, ele pode enviar o lead direto para o CRM via
   risco prático, mas vale reavaliar se o pacote ganhar um patch oficial.
 - O Dockerfile não foi validado com um build real neste ambiente (ver nota
   na seção de deploy) — revise antes do primeiro deploy.
+- **Gerador de mensagens com IA** (botão "Gerar mensagem com IA" no card do
+  lead e no card da cotação): gera um rascunho de WhatsApp ou e-mail (dois
+  tipos — enviar proposta / retomar contato de negociação parada — e dois
+  canais) usando a API da Anthropic. É **opcional**: sem `ANTHROPIC_API_KEY`
+  configurada no servidor, o botão continua visível mas mostra um erro
+  amigável ao gerar. A mensagem gerada é sempre um rascunho — o usuário
+  revisa, edita se quiser e copia/cola ou abre o WhatsApp/e-mail já
+  preenchido; **nada é enviado automaticamente pelo sistema**.
+- **Pedido de compra ao fornecedor** (gerar documento de compra para
+  PRISMA/Sonda Parts/ICEMS etc. ao fechar uma venda) foi pedido mas **não
+  foi implementado**: esse fluxo depende de um Kanban de pós-venda
+  ("Pedidos") que não existe neste sistema hoje — aqui o funil termina em
+  "Ganho"/"Perdido" e não há uma etapa de acompanhamento da compra junto ao
+  fornecedor nem um cadastro de fornecedor/custo por pedido. Para viabilizar
+  esse documento sem vazar preço de venda/margem para o fornecedor, seria
+  necessário construir esse módulo antes.
 
 ## Estrutura do desenvolvimento
 
 O projeto foi construído em 6 fases, cada uma com commit próprio no
-histórico do git:
+histórico do git, mais uma fase adicional:
 
 1. Setup, schema Prisma, autenticação, seed, layout e navegação
 2. CRUD de leads, funil kanban, interações e tarefas
@@ -254,3 +272,5 @@ histórico do git:
 4. Catálogo de produtos, cotações, calculadora de preço, PDF
 5. Dashboard, relatórios, exportação/importação, backup
 6. Documentação e deploy (este README)
+7. Download rápido da proposta comercial (PDF) no card do lead e gerador de
+   mensagens com IA (WhatsApp/e-mail) no card do lead e da cotação

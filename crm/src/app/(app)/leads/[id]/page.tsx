@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft, Plus, Download } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
@@ -13,6 +13,7 @@ import { StatusChanger } from "@/components/leads/status-changer";
 import { WhatsappButton } from "@/components/leads/whatsapp-button";
 import { EditarLeadDialog } from "@/components/leads/editar-lead-dialog";
 import { ExcluirLeadButton } from "@/components/leads/excluir-lead-button";
+import { GeradorMensagemDialog } from "@/components/leads/gerador-mensagem-dialog";
 import { InteracaoForm } from "@/components/leads/interacao-form";
 import { InteracoesTimeline } from "@/components/leads/interacoes-timeline";
 import { TarefaForm } from "@/components/tarefas/tarefa-form";
@@ -56,9 +57,17 @@ export default async function LeadDetalhePage(props: PageProps<"/leads/[id]">) {
             {lead.email ? ` · ${lead.email}` : ""}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <StatusChanger leadId={lead.id} statusAtual={lead.status} />
           <WhatsappButton leadId={lead.id} telefone={lead.telefone} />
+          <GeradorMensagemDialog
+            leadId={lead.id}
+            telefone={lead.telefone}
+            email={lead.email}
+            tipoInicial={
+              ["Cotação enviada", "Em negociação"].includes(lead.status) ? "retomar_contato" : "enviar_proposta"
+            }
+          />
           <EditarLeadDialog lead={lead} usuarios={usuarios} />
           {session?.user.papel === "admin" && <ExcluirLeadButton leadId={lead.id} />}
         </div>
@@ -129,19 +138,26 @@ export default async function LeadDetalhePage(props: PageProps<"/leads/[id]">) {
               <p className="text-muted-foreground">Nenhuma cotação ainda.</p>
             ) : (
               lead.cotacoes.map((c) => (
-                <Link
-                  key={c.id}
-                  href={`/cotacoes/${c.id}`}
-                  className="flex items-center justify-between rounded-md px-2 py-1 hover:bg-secondary"
-                >
-                  <span className="font-mono text-xs">{c.numero}</span>
-                  <div className="flex items-center gap-2">
+                <div key={c.id} className="flex items-center justify-between gap-2 rounded-md px-2 py-1 hover:bg-secondary">
+                  <Link href={`/cotacoes/${c.id}`} className="flex min-w-0 flex-1 items-center gap-2">
+                    <span className="font-mono text-xs">{c.numero}</span>
                     <span className="font-medium">{formatBRL(c.total)}</span>
                     <Badge variant="outline" className="capitalize">
                       {c.status}
                     </Badge>
-                  </div>
-                </Link>
+                  </Link>
+                  {c.status !== "rascunho" && (
+                    <a
+                      href={`/api/cotacoes/${c.id}/pdf`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="Baixar a proposta comercial (PDF)"
+                      className="shrink-0 text-muted-foreground hover:text-foreground"
+                    >
+                      <Download className="size-4" />
+                    </a>
+                  )}
+                </div>
               ))
             )}
           </CardContent>
