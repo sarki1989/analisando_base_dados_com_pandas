@@ -36,14 +36,20 @@ export async function gerarMensagem({
 
   const lead = await prisma.lead.findUnique({
     where: { id: leadId },
-    include: { cotacoes: { orderBy: { emitidaEm: "desc" } } },
+    include: {
+      cotacoes: { orderBy: { emitidaEm: "desc" } },
+      pedidos: { orderBy: { atualizadoEm: "desc" }, take: 1 },
+    },
   });
   if (!lead) throw new Error("Lead não encontrado.");
 
+  const pedido = lead.pedidos[0];
   const cotacao =
     tipo === "retomar_contato"
       ? lead.cotacoes.find((c) => c.status === "enviada" || c.status === "em negociação") ?? lead.cotacoes[0]
-      : lead.cotacoes.find((c) => c.status !== "rascunho") ?? lead.cotacoes[0];
+      : tipo === "pedido_confirmado"
+        ? lead.cotacoes.find((c) => c.id === pedido?.cotacaoId) ?? lead.cotacoes[0]
+        : lead.cotacoes.find((c) => c.status !== "rascunho") ?? lead.cotacoes[0];
 
   const prompt = montarPromptMensagem(tipo, canal, {
     leadNome: lead.nome,
@@ -52,6 +58,9 @@ export async function gerarMensagem({
     cotacaoTotal: cotacao?.total ?? null,
     cotacaoValidadeDias: cotacao?.validadeDias ?? null,
     diasParado: tipo === "retomar_contato" ? diasDesde(cotacao?.emitidaEm ?? lead.ultimoContatoEm) : null,
+    pedidoStatus: tipo === "pedido_confirmado" ? (pedido?.status ?? null) : null,
+    transportadora: tipo === "pedido_confirmado" ? (pedido?.transportadora ?? null) : null,
+    codigoRastreio: tipo === "pedido_confirmado" ? (pedido?.codigoRastreio ?? null) : null,
   });
 
   const texto = await gerarTextoComClaude(prompt);

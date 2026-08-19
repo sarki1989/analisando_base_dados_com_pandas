@@ -37,6 +37,35 @@ describe("montarPromptMensagem", () => {
     expect(prompt).not.toContain("undefined");
   });
 
+  it("inclui status do pedido e rastreio no prompt de pedido_confirmado", () => {
+    const prompt = montarPromptMensagem("pedido_confirmado", "whatsapp", {
+      ...ctxBase,
+      pedidoStatus: "Em trânsito",
+      transportadora: "Jamef",
+      codigoRastreio: "JM123456789BR",
+    });
+    expect(prompt).toContain("Em trânsito");
+    expect(prompt).toContain("Jamef");
+    expect(prompt).toContain("JM123456789BR");
+  });
+
+  it("pedido_confirmado não quebra sem status/transportadora/rastreio", () => {
+    const prompt = montarPromptMensagem("pedido_confirmado", "whatsapp", {
+      leadNome: "Maria",
+      leadEmpresa: "Poços SA",
+      cotacaoNumero: null,
+      cotacaoTotal: null,
+      cotacaoValidadeDias: null,
+      diasParado: null,
+      pedidoStatus: null,
+      transportadora: null,
+      codigoRastreio: null,
+    });
+    expect(prompt).toContain("em andamento");
+    expect(prompt).not.toContain("undefined");
+    expect(prompt).not.toContain("null");
+  });
+
   it("pede formato ASSUNTO/CORPO só para e-mail", () => {
     const promptEmail = montarPromptMensagem("enviar_proposta", "email", ctxBase);
     const promptWhatsapp = montarPromptMensagem("enviar_proposta", "whatsapp", ctxBase);

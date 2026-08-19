@@ -4,12 +4,13 @@
 // geradas são sempre rascunho: o usuário revisa e copia/cola ou abre o
 // WhatsApp/e-mail já preenchido — nada é enviado automaticamente pelo sistema.
 
-export const TIPOS_MENSAGEM = ["enviar_proposta", "retomar_contato"] as const;
+export const TIPOS_MENSAGEM = ["enviar_proposta", "retomar_contato", "pedido_confirmado"] as const;
 export type TipoMensagem = (typeof TIPOS_MENSAGEM)[number];
 
 export const ROTULOS_TIPO_MENSAGEM: Record<TipoMensagem, string> = {
   enviar_proposta: "Enviar proposta",
   retomar_contato: "Retomar contato (negociação parada)",
+  pedido_confirmado: "Avisar sobre o pedido (compra/envio)",
 };
 
 export const CANAIS_MENSAGEM = ["whatsapp", "email"] as const;
@@ -27,6 +28,9 @@ export type ContextoMensagem = {
   cotacaoTotal?: number | null;
   cotacaoValidadeDias?: number | null;
   diasParado?: number | null;
+  pedidoStatus?: string | null;
+  transportadora?: string | null;
+  codigoRastreio?: string | null;
 };
 
 const persona =
@@ -49,6 +53,17 @@ function descreverSituacao(tipo: TipoMensagem, ctx: ContextoMensagem): string {
         } acabou de ser gerada para este cliente.`
       : "Uma proposta comercial acabou de ser gerada para este cliente.";
     return `${detalhesCotacao} Escreva uma mensagem de acompanhamento avisando que a proposta está pronta e reforçando disponibilidade para tirar dúvidas.`;
+  }
+
+  if (tipo === "pedido_confirmado") {
+    const detalhesPedido = ctx.cotacaoNumero
+      ? `A compra referente à cotação ${ctx.cotacaoNumero} deste cliente está com status "${ctx.pedidoStatus ?? "em andamento"}" junto ao fornecedor.`
+      : `A compra deste cliente está com status "${ctx.pedidoStatus ?? "em andamento"}" junto ao fornecedor.`;
+    const detalhesEntrega =
+      ctx.transportadora || ctx.codigoRastreio
+        ? ` Transportadora: ${ctx.transportadora ?? "a definir"}.${ctx.codigoRastreio ? ` Código de rastreio: ${ctx.codigoRastreio}.` : ""}`
+        : "";
+    return `${detalhesPedido}${detalhesEntrega} Escreva uma mensagem avisando o cliente sobre o andamento do pedido, de forma clara e tranquilizadora.`;
   }
 
   const detalhesCotacao = ctx.cotacaoNumero

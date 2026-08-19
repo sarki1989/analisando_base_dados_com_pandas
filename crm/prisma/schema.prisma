@@ -62,6 +62,7 @@ model Lead {
   tarefas     Tarefa[]
   cotacoes    Cotacao[]
   cliques     CliqueWhatsapp[]
+  pedidos     Pedido[]
 
   @@index([status])
   @@index([responsavelId])
@@ -152,7 +153,8 @@ model Cotacao {
   usuarioId String?
   usuario   Usuario? @relation(fields: [usuarioId], references: [id])
 
-  itens ItemCotacao[]
+  itens   ItemCotacao[]
+  pedidos Pedido[]
 
   @@index([leadId])
   @@index([status])
@@ -194,6 +196,29 @@ model CliqueWhatsapp {
 
   @@index([leadId])
   @@index([criadoEm])
+}
+
+// Pedido de compra junto ao fornecedor (pós-venda), um por venda fechada.
+// A cotação vinculada é a referência dos itens/quantidades a comprar — o
+// PDF gerado a partir dela usa o custoFornecedor do produto, nunca o preço
+// de venda cobrado do cliente (ver src/lib/pdf/pedido-pdf.tsx).
+model Pedido {
+  id                     String   @id @default(cuid())
+  leadId                 String
+  lead                   Lead     @relation(fields: [leadId], references: [id])
+  cotacaoId              String?
+  cotacao                Cotacao? @relation(fields: [cotacaoId], references: [id])
+  status                 String   @default("Aguardando compra") // Aguardando compra | Comprado | Em trânsito | Entregue
+  fornecedor             String?
+  numeroPedidoFornecedor String?
+  transportadora         String?
+  codigoRastreio         String?
+  observacoes            String?
+  criadoEm               DateTime @default(now())
+  atualizadoEm           DateTime @updatedAt
+
+  @@index([leadId])
+  @@index([status])
 }
 
 model ConfiguracaoEmpresa {

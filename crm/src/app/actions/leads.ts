@@ -8,6 +8,7 @@ import { auth } from "@/auth";
 import { registrarAuditoria } from "@/lib/audit";
 import { deArrayParaJSON } from "@/lib/json-array";
 import { leadSchema, moverStatusSchema, interacaoSchema } from "@/lib/validation/lead";
+import { garantirPedidoParaLead } from "@/app/actions/pedidos";
 
 async function usuarioLogado() {
   const session = await auth();
@@ -154,6 +155,11 @@ export async function moverStatusLead(input: unknown) {
     detalhe: `${leadAnterior.status} -> ${status}`,
     usuarioId: usuario.id,
   });
+
+  if (status === "Ganho") {
+    await garantirPedidoParaLead(leadId);
+    revalidatePath("/pedidos");
+  }
 
   revalidatePath("/leads");
   revalidatePath(`/leads/${leadId}`);

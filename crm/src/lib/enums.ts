@@ -77,6 +77,10 @@ export type StatusCotacao = (typeof STATUS_COTACAO)[number];
 
 export const CONDICOES_FRETE = ["por conta do cliente", "incluso", "a combinar"] as const;
 
+/** Etapas do Kanban de pós-venda: acompanhamento da compra junto ao fornecedor. */
+export const STATUS_PEDIDO = ["Aguardando compra", "Comprado", "Em trânsito", "Entregue"] as const;
+export type StatusPedido = (typeof STATUS_PEDIDO)[number];
+
 export const PAPEIS_USUARIO = ["admin", "vendedor"] as const;
 export type PapelUsuario = (typeof PAPEIS_USUARIO)[number];
 

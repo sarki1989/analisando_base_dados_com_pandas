@@ -252,19 +252,24 @@ Zapier/Make, ele pode enviar o lead direto para o CRM via
   amigável ao gerar. A mensagem gerada é sempre um rascunho — o usuário
   revisa, edita se quiser e copia/cola ou abre o WhatsApp/e-mail já
   preenchido; **nada é enviado automaticamente pelo sistema**.
-- **Pedido de compra ao fornecedor** (gerar documento de compra para
-  PRISMA/Sonda Parts/ICEMS etc. ao fechar uma venda) foi pedido mas **não
-  foi implementado**: esse fluxo depende de um Kanban de pós-venda
-  ("Pedidos") que não existe neste sistema hoje — aqui o funil termina em
-  "Ganho"/"Perdido" e não há uma etapa de acompanhamento da compra junto ao
-  fornecedor nem um cadastro de fornecedor/custo por pedido. Para viabilizar
-  esse documento sem vazar preço de venda/margem para o fornecedor, seria
-  necessário construir esse módulo antes.
+- **Kanban de Pedidos** (`/pedidos`): acompanhamento pós-venda, com etapas
+  "Aguardando compra" → "Comprado" → "Em trânsito" → "Entregue". Um pedido é
+  criado automaticamente quando um lead vira "Ganho" (e a página `/pedidos`
+  se auto-recupera para leads que viraram "Ganho" por outro caminho). Cada
+  pedido pode ter uma cotação do lead selecionada como **referência** — o
+  PDF de "Pedido de Compra" enviado ao fornecedor (Prisma/Sonda Parts/ICEMS
+  etc.) é montado a partir dos itens/quantidades dessa cotação, mas usando o
+  **custo do fornecedor** (`Produto.custoFornecedor`) como preço unitário —
+  nunca o preço de venda cobrado do cliente. Por isso o PDF não traz nome do
+  cliente/lead nem o valor da cotação, só fornecedor, itens e custo: é um
+  documento interno de compra, não uma via da proposta comercial. Se algum
+  item não tiver custo de fornecedor cadastrado, o PDF avisa em vez de
+  inventar um valor.
 
 ## Estrutura do desenvolvimento
 
 O projeto foi construído em 6 fases, cada uma com commit próprio no
-histórico do git, mais uma fase adicional:
+histórico do git, mais duas fases adicionais:
 
 1. Setup, schema Prisma, autenticação, seed, layout e navegação
 2. CRUD de leads, funil kanban, interações e tarefas
@@ -274,3 +279,5 @@ histórico do git, mais uma fase adicional:
 6. Documentação e deploy (este README)
 7. Download rápido da proposta comercial (PDF) no card do lead e gerador de
    mensagens com IA (WhatsApp/e-mail) no card do lead e da cotação
+8. Kanban de Pedidos (pós-venda) e PDF de Pedido de Compra ao fornecedor,
+   gerado a partir da cotação do cliente
