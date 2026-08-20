@@ -1,7 +1,11 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ConfiguracaoForm } from "@/components/configuracoes/configuracao-form";
+import { UsuarioDialog } from "@/components/configuracoes/usuario-dialog";
+import { UsuarioRowActions } from "@/components/configuracoes/usuario-row-actions";
 import { formatDataHora } from "@/lib/format";
 
 export const metadata = { title: "Configurações — CRM Stokes Brasil" };
@@ -10,7 +14,7 @@ export default async function ConfiguracoesPage() {
   const session = await auth();
   const ehAdmin = session?.user.papel === "admin";
 
-  const [config, auditoria] = await Promise.all([
+  const [config, auditoria, usuarios] = await Promise.all([
     prisma.configuracaoEmpresa.findUniqueOrThrow({ where: { id: "default" } }),
     ehAdmin
       ? prisma.auditLog.findMany({
@@ -19,6 +23,7 @@ export default async function ConfiguracoesPage() {
           take: 30,
         })
       : Promise.resolve([]),
+    ehAdmin ? prisma.usuario.findMany({ orderBy: [{ ativo: "desc" }, { nome: "asc" }] }) : Promise.resolve([]),
   ]);
 
   return (
@@ -37,6 +42,52 @@ export default async function ConfiguracoesPage() {
           <ConfiguracaoForm config={config} podeEditar={ehAdmin} />
         </CardContent>
       </Card>
+
+      {ehAdmin && (
+        <Card className="max-w-3xl">
+          <CardHeader className="flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-base">Usuários</CardTitle>
+            <UsuarioDialog />
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>E-mail</TableHead>
+                  <TableHead>Papel</TableHead>
+                  <TableHead>Ativo</TableHead>
+                  <TableHead />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {usuarios.map((u) => (
+                  <TableRow key={u.id} className={!u.ativo ? "opacity-50" : undefined}>
+                    <TableCell className="font-medium">
+                      {u.nome}
+                      {u.id === session?.user.id && (
+                        <span className="ml-1 text-xs text-muted-foreground">(você)</span>
+                      )}
+                    </TableCell>
+                    <TableCell>{u.email}</TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className="capitalize">
+                        {u.papel}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <UsuarioRowActions usuario={u} ehVoceMesmo={u.id === session?.user.id} />
+                    </TableCell>
+                    <TableCell>
+                      <UsuarioDialog usuario={u} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
 
       {ehAdmin && (
         <Card className="max-w-2xl">

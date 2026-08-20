@@ -40,11 +40,13 @@ Acesse `http://localhost:3000`. Usuários criados pelo seed:
 | admin@stokesbrasil.com.br        | stokes123   | admin     |
 | vendedor@stokesbrasil.com.br     | stokes123   | vendedor  |
 
-**Troque essas senhas** (ou crie novos usuários e desative estes) antes de
-colocar o sistema em uso real — não há tela de "esqueci minha senha"; troca
-de senha e criação de usuário hoje são feitas direto no banco (`npm run
-db:studio` abre uma interface visual do Prisma para editar a tabela
-`Usuario`; o hash é bcrypt).
+**Troque essas senhas** antes de colocar o sistema em uso real. Cadastro de
+novos vendedores, troca de senha e desativação de usuários são feitos em
+**Configurações → Usuários** (só visível para quem está logado como admin) —
+não precisa mexer no banco. Não há tela de "esqueci minha senha": se alguém
+esquecer, um admin abre o usuário em Configurações e define uma nova senha
+por lá. O sistema sempre mantém pelo menos um admin ativo (não deixa
+desativar/rebaixar o último).
 
 O seed também cadastra o catálogo de produtos com base na tabela de preços
 do fornecedor principal (Prisma Ferramentas Diamantadas) e 5 leads de
@@ -269,7 +271,7 @@ Zapier/Make, ele pode enviar o lead direto para o CRM via
 ## Estrutura do desenvolvimento
 
 O projeto foi construído em 6 fases, cada uma com commit próprio no
-histórico do git, mais duas fases adicionais:
+histórico do git, mais fases adicionais:
 
 1. Setup, schema Prisma, autenticação, seed, layout e navegação
 2. CRUD de leads, funil kanban, interações e tarefas
@@ -281,3 +283,5 @@ histórico do git, mais duas fases adicionais:
    mensagens com IA (WhatsApp/e-mail) no card do lead e da cotação
 8. Kanban de Pedidos (pós-venda) e PDF de Pedido de Compra ao fornecedor,
    gerado a partir da cotação do cliente
+9. Gerenciamento de usuários (Configurações → Usuários): admin cadastra
+   vendedores, troca senha e ativa/desativa contas pela interface
