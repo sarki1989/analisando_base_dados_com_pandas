@@ -7,15 +7,18 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatBRL } from "@/lib/format";
 import { calcularTotalItem } from "@/lib/cotacao";
+import { cn } from "@/lib/utils";
 import type { ItemEditavel, ProdutoOpcao } from "./tipos";
 
 export function ItemRow({
   item,
+  index,
   produtos,
   onChange,
   onRemover,
 }: {
   item: ItemEditavel;
+  index: number;
   produtos: ProdutoOpcao[];
   onChange: (item: ItemEditavel) => void;
   onRemover: () => void;
@@ -37,7 +40,12 @@ export function ItemRow({
   }
 
   return (
-    <div className="grid grid-cols-12 items-start gap-2 border-b border-border py-2 last:border-0">
+    <div
+      className={cn(
+        "grid grid-cols-12 items-start gap-2 rounded-md px-2 py-2",
+        index % 2 === 1 && "bg-secondary/40"
+      )}
+    >
       <div className="col-span-12 flex flex-col gap-1 sm:col-span-4">
         <Select value={item.produtoId || "__livre__"} onValueChange={selecionarProduto}>
           <SelectTrigger>

@@ -103,17 +103,18 @@ export function CotacaoBuilder({
           <CardTitle className="text-base">Itens</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-2">
-          <div className="hidden grid-cols-12 gap-2 px-0 text-xs font-medium text-muted-foreground sm:grid">
+          <div className="hidden grid-cols-12 gap-2 px-2 text-xs font-medium text-muted-foreground sm:grid">
             <span className="col-span-4">Produto</span>
             <span className="col-span-2">Quantidade</span>
             <span className="col-span-2">Preço unitário</span>
             <span className="col-span-2">Desconto</span>
             <span className="col-span-1">Total</span>
           </div>
-          {itens.map((item) => (
+          {itens.map((item, index) => (
             <ItemRow
               key={item.chave}
               item={item}
+              index={index}
               produtos={produtos}
               onChange={(novo) => atualizarItem(item.chave, novo)}
               onRemover={() => removerItem(item.chave)}
